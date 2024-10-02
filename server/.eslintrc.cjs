@@ -89,12 +89,13 @@ module.exports = {
 		'no-inline-comments': 'error',
 		'no-implicit-coercion': 'error',
 		'no-shadow': ['error', { builtinGlobals: false, hoist: 'functions', allow: [], ignoreOnInitialization: false }],
-		'prettier/prettier': ['warn', { semi: true }],
 		'no-useless-concat': 'error',
 		'no-useless-catch': 'error',
 		'no-unused-expressions': 'error',
+		'prettier/prettier': ['warn', { semi: true, bracketSameLine: true }],
 		'no-unneeded-ternary': 'error',
 		'no-undefined': 'error',
+		"brace-style": ["error", "1tbs", { "allowSingleLine": true }],
 		'no-restricted-syntax': [
 			'error',
 			{

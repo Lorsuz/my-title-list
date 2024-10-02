@@ -16,7 +16,7 @@ type FormLoginProps = {
 
 export function FormLogin({ toggleHaveAccount }: FormLoginProps): React.FunctionComponentElement<JSX.Element> {
 	const [errorServer, setErrorServer] = React.useState<string>('');
-	const dispatch = useDispatch();
+	const dispatch: any = useDispatch();
 	const navigate = useNavigate();
 	const { state } = useLocation();
 

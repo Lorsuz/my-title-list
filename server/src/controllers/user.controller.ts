@@ -1,172 +1,191 @@
 import * as UserTypes from '../types/user.types.js';
 import OrderModel from '../models/order.model.js';
 import UserModel from '../models/user.model.js';
-import TokenModel from '../models/token.model.js';
-import bcrypt from 'bcryptjs';
 import expressAsyncHandler from 'express-async-handler';
+import { crypto, pool, bcrypt, zod } from '../config/router.config.js';
+import { generateProfileImageUrl, getFirstAndLastName } from '../utils/stringOperations.js';
 import { generateToken } from '../middlewares/auth.middleware.js';
 import { users } from '../exports/preDatabase.js';
-
-import { crypto } from '../config/router.config.js';
-import { generateProfileImageUrl, getFirstAndLastName } from '../utils/stringOperations.js';
 import { verifyEmail } from '../services/email.service.js';
+import { authSchema } from '../schemas/auth.schema.js';
+import { sendEmailFromFormContact } from '../services/email.service.js';
 
-const importUsers = expressAsyncHandler( async ( req, res ) =>
-{
-	// await UserModel.deleteMany( {} );
-	// await TokenModel.deleteMany( {} );
-	users.forEach( ( user ) =>
-	{
-		user.password = bcrypt.hashSync( user.password, 10 );
-		user.profileImage = generateProfileImageUrl( user.fullName );
-	} );
-	const createdUsers = await UserModel.insertMany( users );
-	res.status( 201 ).send( createdUsers );
+
+
+// #region import users
+/**
+ *	@desc			auth user & get token
+ *	@route		POST /api/users/import-all
+ *	@access		public
+ **/
+
+export const importUsers = expressAsyncHandler( async ( req, res, next ) => {
+	try {
+		await pool.execute( 'DELETE * FROM users' );
+		await pool.execute( 'DELETE * FROM tokens' );
+		let createdUsers: any[] = [];
+		users.forEach( async ( user ) => {
+			user.password = bcrypt.hashSync( user.password, 10 );
+			user.profileImage = generateProfileImageUrl( user.fullName );
+			const hashedPassword = bcrypt.hashSync( user.password, 10 );
+			const createdUser = await pool.execute(
+				'INSERT INTO users (fullName, email, password, profileImage, phone) VALUES (?, ?, ?, ?, ?)',
+				[ user.fullName, user.email, hashedPassword, user.profileImage, user.phone ]
+			);
+			createdUsers.push( createdUser );
+		} );
+		res.status( 201 ).send( createdUsers );
+	} catch ( error ) {
+		next( error );
+	}
 } );
+
+// #endregion
+
+// #region login
 
 /**
-	* @desc			auth user & get token
-	*	@route		POST /api/users/login
-	*	@access		public 
-	**/
+ *	@desc			auth user & get token
+ *	@route		POST /api/users/login
+ *	@access		public
+ **/
 
-const login = expressAsyncHandler( async ( req, res ) =>
-{
-	try
-	{
+export const login = expressAsyncHandler( async ( req, res, next ) => {
+	try {
 		const { email, password } = req.body;
-		if ( !email || !password )
-		{
+		if ( !email || !password ) {
 			throw new Error( 'Email e senha são obrigatórios' );
 		}
-		const user: UserTypes.FromDatabaseForClient | null = await UserModel.findOne( { email } );
-		if ( user && user.verified )
-		{
-			if ( bcrypt.compareSync( password, user.password ) )
-			{
-				res.json( {
-					_id: user._id,
-					name: getFirstAndLastName( user.fullName ),
-					email: user.email,
-					phone: user.phone,
-					profileImage: user.profileImage,
-					isAdmin: user.isAdmin,
-					token: generateToken( user._id.toString() )
-				} );
-			} else
-			{
-				throw new Error( 'Senha invalida' );
+		const [ users ]: any = await pool.execute( 'SELECT * FROM users WHERE email = ?', [ email ] );
+
+		if ( users.length > 0 ) {
+			const user = users[ 0 ];
+			if ( user.verified ) {
+				if ( bcrypt.compareSync( password, user.password ) ) {
+					res.json( {
+						_id: user._id,
+						name: getFirstAndLastName( user.fullName ),
+						email: user.email,
+						phone: user.phone,
+						profileImage: user.profileImage,
+						isAdmin: user.isAdmin,
+						token: generateToken( user._id.toString() )
+					} );
+				} else {
+					throw new Error( 'Senha inválida' );
+				}
+			} else {
+				throw new Error( 'Usuário não verificado' );
 			}
-		} else
-		{
+		} else {
 			throw new Error( 'Email não cadastrado' );
 		}
-	} catch ( error: any )
-	{
-		const status = error.message ? 401 : 500;
-		res.status( status ).json( { message: error.message } );
+	} catch ( error ) {
+		console.error( error );
+
 	}
 } );
 
-const register = expressAsyncHandler( async ( req, res ) =>
-{
-	try
-	{
-		const { fullName, email, password, phone }: UserTypes.FromClientForRegister = req.body;
-		console.log( fullName, email, password, phone );
-		const existUser: UserTypes.FromDatabaseForClient | null = await UserModel.findOne( { email } );
-		if ( existUser )
-		{
+// #endregion
+
+// #region register
+
+/** 
+ *	@desc			auth user & get token
+ *	@route		POST /api/users/register
+ *	@access		public
+ **/
+
+export const register = expressAsyncHandler( async ( req, res, next ) => {
+	const { fullName, email, password, phone } = req.body;
+
+	// const { email, password } = authSchema.parse( req.body );
+
+	try {
+		const [ existingUsers ]: any = await pool.execute( 'SELECT * FROM users WHERE email = ?', [ email ] );
+		if ( existingUsers.length > 0 ) {
 			res.status( 400 );
 			throw new Error( 'Email already exists' );
-		} else
-		{
-
-			const profileImage = generateProfileImageUrl( fullName );
-
-			const newUser = await UserModel.create( {
-				fullName,
-				email,
-				password: bcrypt.hashSync( password, 10 ),
-				profileImage,
-				phone
-			} );
-			const registerToken = new TokenModel(
-				{ userId: newUser._id, token: crypto.randomBytes( 16 ).toString( 'hex' ) }
-			);
-			await registerToken.save();
-			const url = `${ process.env.API_URL }/users/verify?token=${ registerToken.token }`;
-			await verifyEmail( newUser.email, url );
-
-
-			if ( newUser )
-			{
-
-				res.status( 201 ).json( {
-					// _id: newUser._id,
-					// name: getFirstAndLastName(newUser.fullName),
-					// email: newUser.email,
-					// phone: newUser.phone,
-					// profileImage: newUser.profileImage,
-					// isAdmin: newUser.isAdmin,
-					message: 'User created successfully. Please verify your email to login'
-					// token: generateToken(newUser._id.toString())
-				} );
-			} else
-			{
-				res.status( 400 );
-				throw new Error( 'Dados de Usuário Inválidos' );
-			}
 		}
-	} catch ( error: any )
-	{
-		res.status( 500 ).json( { message: error.message } );
+		const profileImage = generateProfileImageUrl( fullName );
+		// ! Lembrar de validar nome, nick, email e telefone antes de inserir no banco de dados ZOD
+		const hashedPassword = bcrypt.hashSync( password, 10 );
+		const nickname: string[] | null = email.match( /^(.+)@/ );
+		const [ result ]: any = await pool.execute(
+			'INSERT INTO users (fullName, nickname, email, password, profileImage, phone) VALUES (?, ?, ?, ?, ?)',
+			[ fullName, nickname, email, hashedPassword, profileImage, phone ]
+		);
+		const userId = result.insertId;
+		const token = crypto.randomBytes( 16 ).toString( 'hex' );
+		await pool.execute( 'INSERT INTO tokens (user_id, token) VALUES (?, ?)', [ userId, token ] );
+		const url = `${ process.env.API_URL }/users/verify?token=${ token }`;
+		await verifyEmail( email, url );
+		res.status( 201 ).json( {
+			message: 'Verifique seu email'
+		} );
+	} catch ( error ) {
+		console.error( error );
 	}
 } );
+// #endregion
 
-const verifyToken = expressAsyncHandler( async ( req: any, res ) =>
-{
-	console.log( req.query.token );
+// #region verify token
+/**
+ *	@desc			auth user & get token
+ *	@route		POST /api/users/login
+ *	@access		public
+ **/
 
-	try
-	{
-		const token = await TokenModel.findOne( { token: req.query.token } );
-		if ( token )
-		{
-			await UserModel.updateOne( { _id: token.userId }, { $set: { verified: true } } );
-			await TokenModel.findByIdAndDelete( token._id );
-
+export const verifyToken = expressAsyncHandler( async ( req, res, next ) => {
+	try {
+		const [ tokens ]: any = await pool.execute( 'SELECT * FROM tokens WHERE token = ?', [ req.query.token ] );
+		if ( tokens.length > 0 ) {
+			const token = tokens[ 0 ];
+			const [ updateResult ] = await pool.execute( 'UPDATE users SET verified = ? WHERE _id = ?', [ true, token.user_id ] );
+			if ( updateResult.affectedRows > 0 ) {
+				console.log( 'Usuário verificado com sucesso, buscando informações do usuário...' );
+				const [ rows ] = await pool.execute( 'SELECT email FROM users WHERE _id = ?', [ token.user_id ] );
+				if ( rows.length > 0 ) {
+					const user = rows[ 0 ];
+					console.log( 'Verificando valor de user em verify login:', user );
+					await sendEmailFromFormContact( user.email );
+				} else {
+					console.error( 'Nenhum usuário encontrado com esse ID após o UPDATE' );
+				}
+			} else {
+				console.error( 'Nenhuma linha foi atualizada' );
+			}
+			await pool.execute( 'DELETE FROM tokens WHERE user_id = ?', [ token.user_id ] );
 			res.status( 200 ).json( { message: 'Email verified successfully' } );
-		} else
-		{
+		} else {
 			res.status( 400 ).json( { message: 'Invalid token' } );
 		}
-	} catch ( error: any )
-	{
-		res.status( 500 ).json( { message: error.message } );
+	} catch ( error ) {
+		next( error );
 	}
 } );
 
-// @desc    Update user profile
-// @route   PUT /api/users/profile
-// @access  Private
+// #endregion
 
-const updateProfile = expressAsyncHandler( async ( req: any, res ) =>
-{
-	try
-	{
+// #region update profile
+
+/**
+ *	@desc			auth user & get token
+ *	@route		POST /api/users/login
+ *	@access		private
+ **/
+
+export const updateProfile = expressAsyncHandler( async ( req: any, res, next ) => {
+	try {
 		const user: any = await UserModel.findById( req.user._id );
-		if ( user )
-		{
+		if ( user ) {
 			user.fullName = req.body.fullName || user.fullName;
 			user.email = req.body.email || user.email;
 			user.phone = req.body.phone || user.phone;
 			user.image = req.body.image || user.image;
-
 			// if(req.body.password){
 			// 	user.password = bcrypt.hashSync(req.body.password, 10)
 			// }
-
 			const updatedUser = await user.save();
 			res.json( {
 				_id: updatedUser._id,
@@ -177,94 +196,108 @@ const updateProfile = expressAsyncHandler( async ( req: any, res ) =>
 				isAdmin: updatedUser.isAdmin,
 				token: generateToken( updatedUser._id )
 			} );
-		} else
-		{
+		} else {
 			res.status( 404 );
 			throw new Error( 'User not found' );
 		}
-	} catch ( error: any )
-	{
-		res.status( 400 ).json( { message: error.message } );
+	} catch ( error ) {
+		next( error );
 	}
 } );
 
-// @desc    Change user password
-// @route   PUT /api/users/change-password
-// @access  Private
+// #endregion
 
-const changePassword = expressAsyncHandler( async ( req: any, res ) =>
-{
-	try
-	{
+// #region change password
+
+/**
+ *	@desc			auth user & get token
+ *	@route		POST /api/users/login
+ *	@access		private
+ **/
+
+export const changePassword = expressAsyncHandler( async ( req: any, res, next ) => {
+	try {
 		const { oldPassword, newPassword } = req.body;
 		const user: any = await UserModel.findById( req.user._id );
-		if ( user )
-		{
-			if ( bcrypt.compareSync( oldPassword, user.password ) )
-			{
+		if ( user ) {
+			if ( bcrypt.compareSync( oldPassword, user.password ) ) {
 				user.password = bcrypt.hashSync( newPassword, 10 );
 				await user.save();
 				res.json( { message: 'Password changed successfully' } );
-			} else
-			{
+			} else {
 				res.status( 401 );
 				throw new Error( 'Invalid old password' );
 			}
-		} else
-		{
+		} else {
 			res.status( 404 );
 			throw new Error( 'User not found' );
 		}
-	} catch ( error: any )
-	{
-		res.status( 400 ).json( { message: error.message } );
+	} catch ( error ) {
+		next( error );
 	}
 } );
 
-// @desc Delete user
-// @route DELETE /api/users/users
-// @access Private/Admin
+// #endregion
 
-const deleteUser = expressAsyncHandler( async ( req: any, res ) =>
-{
-	try
-	{
+// #region delete user
+
+/**
+ * @desc Delete user
+ * @route DELETE /api/users/users
+ * @access private
+ **/
+
+export const deleteUser = expressAsyncHandler( async ( req: any, res, next ) => {
+	try {
 		const user: any = await UserModel.findByIdAndDelete( req.user._id );
-		if ( user )
-		{
+		if ( user ) {
 			await OrderModel.deleteMany( { user: user._id } );
 			res.json( { message: 'User removed' } );
-		} else
-		{
+		} else {
 			res.status( 404 );
 			throw new Error( 'User not found' );
 		}
-	} catch ( error: any )
-	{
-		res.status( 400 ).json( { message: error.message } );
+	} catch ( error ) {
+		next( error );
 	}
 } );
 
-// const getAllUsers = async (req: Request, res: Response) => {
-// 	try {
-// 		const users = await prisma.user.findMany();
-// 		res.json(users);
-// 	} catch (error) {
-// 		res.status(500).json({ error: 'An unexpected error occurred', message: 'Error fetching users' });
-// 	}
-// };
+// #endregion
 
-const getAllUsers = expressAsyncHandler( async ( req, res ) =>
-{
-	try
-	{
+// #region get all users
+
+/**
+ *	@desc			auth user & get token
+ *	@route		POST /api/users/login
+ *	@access		public
+ **/
+
+export const getAllUsers = expressAsyncHandler( async ( req, res, next ) => {
+	try {
 		const users = await UserModel.find( {} );
 		res.json( users );
-	}
-	catch ( error: any )
-	{
-		res.status( 500 ).json( { message: error.message } );
+	} catch ( error ) {
+		next( error );
 	}
 } );
 
-export { importUsers, login, register, updateProfile, changePassword, deleteUser, getAllUsers, verifyToken };
+// #endregion
+
+// #region log out
+
+/**
+ *	@desc			auth user & get token
+ *	@route		POST /api/users/login
+ *	@access		private
+ **/
+
+export const logOut = expressAsyncHandler( async ( req, res, next ) => {
+	try {
+		res.clearCookie( 'jwt' );
+		res.status( 200 ).json( { message: 'Sessão encerrada com sucesso!' } );
+	} catch ( error ) {
+		next( error );
+	}
+} );
+
+// #endregion

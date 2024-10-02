@@ -1,4 +1,4 @@
-import { Request, Response, getAuthSheets } from '../config/router.config.js';
+import { Request, Response } from '../config/router.config.js';
 import { sendEmailFromFormContact } from '../services/email.service.js';
 
 export const formForContactWithEmail = async ( req: Request, res: Response ) =>
@@ -15,15 +15,5 @@ export const formForContactWithEmail = async ( req: Request, res: Response ) =>
 	}
 };
 
-export const formForParadeWithUs = async ( req: Request, res: Response ) =>
-{
-	const { googleSheets, auth, spreadsheetId } = await getAuthSheets();
-	const metadata = await googleSheets.spreadsheets.values.get( {
-		auth,
-		spreadsheetId,
-		range: 'Sheet1'
-	} );
 
-	res.send( metadata.data );
 
-};

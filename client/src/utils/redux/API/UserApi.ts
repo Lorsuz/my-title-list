@@ -42,7 +42,7 @@ const logoutService = () =>
 	return null;
 };
 
-const upadateProfileService = async ( user: any, token: string ) =>
+const updateProfileService = async ( user: any, token: string ) =>
 {
 	try
 	{
@@ -63,4 +63,4 @@ const upadateProfileService = async ( user: any, token: string ) =>
 	}
 };
 
-export { loginService, logoutService, registerService, upadateProfileService };
+export { loginService, logoutService, registerService, updateProfileService };

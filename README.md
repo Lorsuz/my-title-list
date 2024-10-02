@@ -409,5 +409,3 @@ Este projeto faz uso das seguintes bibliotecas de código aberto:
 - [Nome da Biblioteca](link_para_repositório) - Descrição da biblioteca ou breve resumo do seu propósito.
 
 Agradecemos aos mantenedores e contribuidores dessas bibliotecas por seu trabalho incrível!
-# santa-cruz
-# santa-cruz

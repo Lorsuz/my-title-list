@@ -5,7 +5,7 @@ import { router} from '../config/router.config.js';
 router.get('/all', isAuthenticated, isAdmin, UserController.getAllUsers);
 router.get('/verify', UserController.verifyToken);
 
-router.post('/import/all', UserController.importUsers);
+router.post('/import-all', UserController.importUsers);
 router.post('/register', UserController.register);
 router.post('/login', UserController.login);
 
