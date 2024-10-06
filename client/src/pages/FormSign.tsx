@@ -174,7 +174,7 @@ const StyledComponent = styled.section<{ $haveAccount: boolean }>`
 			justify-content: center;
 			align-items: center;
 			/* display: none; */
-			background: #fff center no-repeat;
+			background: #000000 center no-repeat;
 			background-size: cover;
 			transition: transform 0.5s ease-in-out;
 			${({ $haveAccount }) => ($haveAccount ? 'transform: translateX(100%);' : '')}
