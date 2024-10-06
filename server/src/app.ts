@@ -11,9 +11,12 @@ import { errorHandler } from './middlewares/res.middleware.js';
 
 dotenv.config();
 
-import indexRouter from './routers/index.route.js';
+import indexRouter from './routers/index.router.js';
 import userRouter from './routers/user.router.js';
-// import categoriesRouter from './routers/category.router.js';
+import boxRouter from './routers/box.router.js';
+import gradeRouter from './routers/grade.router.js';
+import titleRouter from './routers/title.router.js';
+import categoryRouter from './routers/category.router.js';
 
 const app: Application = express();
 
@@ -26,17 +29,16 @@ app.use( logger( 'dev' ) );
 
 app.get( '/', ( _, res, next ) => {
 	try {
-		throw new Error("Ariel");
-		
 		res.end( 'API is running here!' );
 	} catch ( error ) {
-		next(error)
+		next( error );
 	}
 }
 );
 
 app.use( '/api', indexRouter );
-app.use( '/api/users', userRouter );
+app.use( '/api/user', userRouter );
+app.use( '/api/title', titleRouter );
 
 app.use( errorHandler );
 
@@ -56,9 +58,9 @@ app.use( ( err: { message: string; status: number; }, req: Request, res: Respons
 export default app;
 
 /*
- ?
- !
- //
- *
- TODO:
+ ? sadadd
+ ! sdaadsdasd
+ // asdasddasdsd
+ * sdaasdad
+ TODO: sdsddsds
  */

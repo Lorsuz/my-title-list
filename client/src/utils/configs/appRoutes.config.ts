@@ -19,6 +19,8 @@ export const AppRoutes = {
 	carnival: '/carnivals/',
 	site: '/site',
 
+	login: '/login',
+	register: '/register',
 	sign: '/sign',
 	fanMember: '/fan-member',
 

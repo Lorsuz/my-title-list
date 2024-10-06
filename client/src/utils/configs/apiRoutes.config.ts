@@ -1,5 +1,5 @@
 export const ApiRoutes = {
-	register: 'api/users/register',
-	login: 'api/users/login',
-	logout: 'api/users/logout'
+	register: 'api/user/register',
+	login: 'api/user/login',
+	logout: 'api/user/logout'
 };

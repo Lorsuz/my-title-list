@@ -31,7 +31,6 @@ const StyledComponent = styled.section`
 	h1 {
 		text-align: center;
 		margin-bottom: 20px;
-		font-family: 'Advent Pro', sans-serif;
 		color: var(--color-primary);
 		font-weight: 500;
 		font-size: 3.5rem;

@@ -71,7 +71,6 @@ const StyledComponent = styled.section`
 			h2 {
 				margin-bottom: 20px;
 				font-size: 3rem;
-				font-family: 'Advent Pro', sans-serif;
 				font-weight: 500;
 			}
 

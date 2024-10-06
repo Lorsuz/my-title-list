@@ -1,4 +1,3 @@
-import * as UserTypes from '../types/user.types.js';
 import OrderModel from '../models/order.model.js';
 import UserModel from '../models/user.model.js';
 import expressAsyncHandler from 'express-async-handler';
@@ -118,7 +117,7 @@ export const register = expressAsyncHandler( async ( req, res, next ) => {
 		const userId = result.insertId;
 		const token = crypto.randomBytes( 16 ).toString( 'hex' );
 		await pool.execute( 'INSERT INTO tokens (user_id, token) VALUES (?, ?)', [ userId, token ] );
-		const url = `${ process.env.API_URL }/users/verify?token=${ token }`;
+		const url = `${ process.env.API_URL }/users/verify-token?token=${ token }`;
 		await verifyEmail( email, url );
 		res.status( 201 ).json( {
 			message: 'Verifique seu email'

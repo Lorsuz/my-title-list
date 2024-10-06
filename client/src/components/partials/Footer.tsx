@@ -36,7 +36,7 @@ const Footer = (): React.FunctionComponentElement<JSX.Element> => (
 							<a href=''>Diretoria</a>
 						</li>
 						<li>
-							<a href=''>O Parvilhão</a>
+							<a href=''>O Pavilhão</a>
 						</li>
 						<li>
 							<a href=''>A Torcida</a>
@@ -105,7 +105,7 @@ const Footer = (): React.FunctionComponentElement<JSX.Element> => (
 					<SocialMedia customStyled={true} />
 				</div>
 			</section>
-			<section className='copyriht'>
+			<section className='copyright'>
 				<p>&copy; Copyright 2023 - Todos os direitos reservados.</p>
 			</section>
 			<section className='terms'>
@@ -282,7 +282,7 @@ const StyledComponent = styled.footer`
 				}
 			}
 
-			&.copyriht {
+			&.copyright {
 				grid-column: 2/6;
 				grid-row: 2/3;
 				display: flex;
@@ -345,7 +345,7 @@ const StyledComponent = styled.footer`
 					&.newsletter {
 					}
 
-					&.copyriht {
+					&.copyright {
 						grid-column: 2/12;
 						justify-content: center;
 						grid-row: 3/4;
@@ -390,7 +390,7 @@ const StyledComponent = styled.footer`
 						align-items: center;
 					}
 
-					&.copyriht {
+					&.copyright {
 						grid-row: 4/5;
 					}
 

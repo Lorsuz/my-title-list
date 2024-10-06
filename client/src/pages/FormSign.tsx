@@ -4,7 +4,7 @@ import FormLogin from '@component/forms/LoginForm';
 import FormRegister from '@component/forms/RegisterForm';
 
 import Layout from '@layout/PagesLayout';
-import BackgroundForOverlay from '@image/Logo/gresasc-overlay.jpg';
+// import BackgroundForOverlay from '@image/Logo/gresasc-overlay.jpg';
 
 const FormSign = () => {
 	const [haveAccount, setHaveAccount] = React.useState<boolean>(true);
@@ -174,7 +174,7 @@ const StyledComponent = styled.section<{ $haveAccount: boolean }>`
 			justify-content: center;
 			align-items: center;
 			/* display: none; */
-			background: #fff url(${BackgroundForOverlay}) center no-repeat;
+			background: #fff center no-repeat;
 			background-size: cover;
 			transition: transform 0.5s ease-in-out;
 			${({ $haveAccount }) => ($haveAccount ? 'transform: translateX(100%);' : '')}

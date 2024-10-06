@@ -34,8 +34,8 @@ const ButtonOpenProfile = () => {
 					</button>
 				) : (
 					<div className='button-sign'>
-						<span>Gostaria de usar uma conta?</span>
-						<NavLink to={AppRoutes.sign}>Entrar</NavLink>
+						<NavLink to={AppRoutes.login}>Login</NavLink>
+						<NavLink to={AppRoutes.register}>Cadastrar</NavLink>
 					</div>
 				)}
 			</div>

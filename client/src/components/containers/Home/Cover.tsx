@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SocialMedia from '@component/shared/SocialMedia';
-import LogoPng from '@image/Logo/santa-cruz-logo-removebg-preview.png';
+// import LogoPng from '@image/Logo/santa-cruz-logo-removebg-preview.png';
 
 import styled from 'styled-components';
 
@@ -10,24 +10,19 @@ const HomeCover = (): React.FunctionComponentElement<JSX.Element> => (
 		<div className='wrapper'>
 			<div className='left'>
 				<div className='container'>
-					<h2>Grêmio Recreativo Escola de Samba</h2>
-					<h1>Acadêmicos de Santa Cruz</h1>
+					<h2>My Interactive Library of Artworks</h2>
+					<h1>MILA APP</h1>
 					<p>
-						Bem-vindos! Aqui o samba é vida, a cultura é paixão e a alegria é eterna. No coração de Santa Cruz, encontre a felicidade em cada batida de tambor. Feliz da vida é quem
-						tem a Santa Cruz no coração.
+						Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ratione sequi laborum at sapiente non quia inventore animi praesentium iusto, natus necessitatibus facilis modi delectus rem aliquam facere excepturi repellat tempora eos!
 					</p>
-					<Link to='/loja'>
-						Ir para Loja
-					</Link>
+					<Link to='/loja'>Ir para Loja</Link>
 					<div className='social-media'>
 						<SocialMedia />
 					</div>
 				</div>
 			</div>
 			<div className='right'>
-				<div className='img'>
-					<img src={LogoPng} alt='Logo' />
-				</div>
+				<div className='img'>{/* <img src={LogoPng} alt='Logo' /> */}</div>
 				<div className='social-media'>
 					<SocialMedia />
 				</div>
@@ -51,19 +46,16 @@ const StyledComponent = styled.section`
 			.container {
 				h2 {
 					color: var(--color-primary-soft);
-					font-family: wedding;
-					font-size: 2.5rem;
-					font-weight: 900;
+					font-size: 1.7rem;
+					font-weight: 500;
 					line-height: 0.4;
 				}
 
 				h1 {
 					color: var(--color-primary-soft);
-					font-family: wedding;
 					font-size: 4rem;
 					margin-bottom: 20px;
-					font-weight: 900;
-
+					font-weight: 500;
 				}
 
 				p {

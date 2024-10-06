@@ -6,7 +6,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from '@redux/store.ts';
 import '@library/extensions/String.ts';
-console.log( 'ariel'.isValidRangeLength( 2, 4 ) );
 
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

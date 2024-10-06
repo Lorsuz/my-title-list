@@ -1,17 +1,21 @@
 import * as UserController from '../controllers/user.controller.js';
 import { isAdmin, isAuthenticated } from '../middlewares/auth.middleware.js';
-import { router} from '../config/router.config.js';
+import { router } from '../config/router.config.js';
 
-router.get('/all', isAuthenticated, isAdmin, UserController.getAllUsers);
-router.get('/verify', UserController.verifyToken);
+router.post( '/import-all', UserController.importUsers );
 
-router.post('/import-all', UserController.importUsers);
-router.post('/register', UserController.register);
-router.post('/login', UserController.login);
+router.route( '/' )
+	.get( isAuthenticated, isAdmin, UserController.getAllUsers )
+	.put( isAuthenticated, UserController.updateProfile )
+	.delete( isAuthenticated, UserController.deleteUser );
 
-router.put('/', isAuthenticated, UserController.updateProfile);
-router.put('/', isAuthenticated, UserController.changePassword);
+router.get( '/verify-token', UserController.verifyToken );
 
-router.delete('/', isAuthenticated, UserController.deleteUser);
+router.post( '/register', UserController.register );
+router.post( '/login', UserController.login );
+
+router.put( '/change-password', isAuthenticated, UserController.changePassword );
+
+TODO: router.get('/:nickname', UserController.getByNickname);
 
 export default router;
